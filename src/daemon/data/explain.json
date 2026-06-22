@@ -1,0 +1,120 @@
+{
+  "meta": {
+    "leviticus_version": "0.1.0",
+    "generated_at": "2026-06-21T18:42:00Z",
+    "source": "leviticus-daemon",
+    "immutable": true
+  },
+
+  "project": {
+    "name": "leviticus",
+    "root": "/Users/me/dev/leviticus",
+    "workspace": true,
+    "language_guess": "rust"
+  },
+
+  "toolchain": {
+    "rust": "1.75.0",
+    "node": "20.11.0",
+    "typescript": "5.4.2",
+    "cargo": "1.75.0"
+  },
+
+  "active_view": {
+    "name": "rust-dev",
+    "description": "development view optimized for Rust + debugging",
+    "rules": {
+      "show_tests": true,
+      "show_docs": false,
+      "naming_convention": "kebab-case",
+      "hidden_paths": ["target/", "node_modules/"],
+      "config_priority": ["view", "workspace", "crate", "global"]
+    }
+  },
+
+  "filesystem": {
+    "tracked_root": "/Users/me/dev/leviticus",
+    "uid_mapping": {
+      "uid:1001": "src/main.rs",
+      "uid:1002": "src/daemon/mod.rs",
+      "uid:1003": "crates/evaluator/Cargo.toml"
+    }
+  },
+
+  "dependencies": {
+    "resolved": {
+      "swc": {
+        "version": "1.13.5",
+        "source": "./crates/evaluator/Cargo.toml",
+        "scope": "crate",
+        "overrides": [
+          {
+            "source": "./Cargo.toml",
+            "type": "workspace"
+          }
+        ]
+      },
+
+      "tokio": {
+        "version": "1.52.3",
+        "source": "./Cargo.lock",
+        "scope": "workspace",
+        "overrides": []
+      }
+    }
+  },
+
+  "conflicts": [
+    {
+      "type": "dependency_override",
+      "item": "swc",
+      "severity": "warning",
+      "description": "swc defined in both workspace and crate level",
+      "resolution": "crate wins due to local precedence rule",
+      "locations": ["./Cargo.toml", "./crates/evaluator/Cargo.toml"]
+    }
+  ],
+
+  "resolution_graph": {
+    "rules_applied": [
+      "crate_overrides_workspace",
+      "lockfile_canonical_versions_win",
+      "view_rules_override_display_only"
+    ],
+
+    "events": [
+      {
+        "step": 1,
+        "action": "scan_workspace",
+        "result": "found 2 Cargo.toml files"
+      },
+      {
+        "step": 2,
+        "action": "dependency_resolution",
+        "item": "swc",
+        "candidates": ["workspace", "crate"],
+        "winner": "crate"
+      }
+    ]
+  },
+
+  "explanations": {
+    "summary": "Project is in a healthy state with 1 non-critical dependency override conflict.",
+    "human_readable": [
+      "SWC is defined in both workspace and crate-level configs.",
+      "The crate-level version is currently used.",
+      "This follows Rust's local override precedence rules."
+    ]
+  },
+
+  "navigation": {
+    "module_graph": "./.leviticus/graphs/modules.json",
+    "dependency_graph": "./.leviticus/graphs/deps.json",
+    "config_trace": "./.leviticus/explain/config.md"
+  },
+
+  "views": {
+    "available": ["rust-dev", "rust-prod", "docs-only", "minimal"],
+    "active": "rust-dev"
+  }
+}

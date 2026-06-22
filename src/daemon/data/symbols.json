@@ -1,0 +1,32 @@
+{
+  "symbols": [
+    {
+      "id": "leviticus.root",
+      "type": "constant",
+      "value": "~/.leviticus",
+      "immutable": true,
+      "doc": "Root directory of leviticus system state"
+    },
+
+    {
+      "id": "leviticus.config",
+      "type": "file",
+      "path": "~/.leviticus/config.toml",
+      "doc": "Global daemon configuration"
+    },
+
+    {
+      "id": "leviticus.state",
+      "type": "file",
+      "path": "~/.leviticus/state.json",
+      "doc": "Runtime state (starts, uptime, etc.)"
+    },
+
+    {
+      "id": "leviticus.view.default",
+      "type": "file",
+      "path": "~/.leviticus/views/default.toml",
+      "doc": "Default view definition"
+    }
+  ]
+}
