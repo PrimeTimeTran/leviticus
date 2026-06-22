@@ -1,11 +1,10 @@
+use crate::daemon::{
+    resolver::{leviticus_root, project_root},
+    state::DaemonState,
+};
 use std::{
     fs,
     path::{Path, PathBuf},
-};
-
-use crate::{
-    daemon::resolver::{leviticus_root, project_root},
-    state::state,
 };
 
 fn file_link(path: &Path) -> String {
@@ -13,23 +12,18 @@ fn file_link(path: &Path) -> String {
 
     format!("file://{}", p.to_string_lossy())
 }
-
 fn data_dir() -> PathBuf {
     PathBuf::from("src/daemon/data")
 }
-
 fn explain_json_path() -> PathBuf {
     data_dir().join("explain.json")
 }
-
 fn manifest_json_path() -> PathBuf {
     data_dir().join("manifest.json")
 }
-
 fn symbols_json_path() -> PathBuf {
     data_dir().join("symbols.json")
 }
-
 fn read_symbols() -> serde_json::Value {
     let path = symbols_json_path();
 
@@ -37,7 +31,6 @@ fn read_symbols() -> serde_json::Value {
 
     serde_json::from_str(&raw).unwrap_or_else(|_| serde_json::json!([]))
 }
-
 fn symbol_to_md(symbol: &serde_json::Value) -> String {
     let id = symbol
         .get("id")
@@ -121,7 +114,7 @@ fn render_symbols(json: &serde_json::Value) -> String {
 }
 pub fn generate_explain_doc() -> std::io::Result<()> {
     let workspace = std::env::current_dir()?;
-    state::save_workspace(&workspace);
+    DaemonState::save_workspace(&workspace);
     let out = workspace.join("explain.md");
     let path = explain_json_path();
 
@@ -146,12 +139,10 @@ pub fn generate_explain_doc() -> std::io::Result<()> {
 
     Ok(())
 }
-
 pub fn generate_runtime_views() {
     println!("▶ generate_runtime_views CALLED");
     generate_explain_doc();
 }
-
 fn render_explain(json: &serde_json::Value) -> String {
     let mut out = String::new();
 
@@ -220,10 +211,6 @@ fn render_explain(json: &serde_json::Value) -> String {
     out.push_str("\n");
 
     out
-}
-
-pub fn generate_explain_doc2() {
-    todo!("generate_explain_doc2")
 }
 pub fn open_explain_doc() {
     todo!("open_explain_doc")
