@@ -1,4 +1,4 @@
-# Loid Explain
+# leviticus Explain
 
 ## Symbols (Clickable)
 
@@ -6,14 +6,14 @@
 
 ### File Registry
 
-- `uid:1001` → [src/main.rs](file:///Users/future/KB/project/app/loi/crates/loid/src/main.rs)
-- `uid:1002` → [src/daemon/mod.rs](file:///Users/future/KB/project/app/loi/crates/loid/src/daemon/mod.rs)
-- `uid:1003` → [crates/evaluator/Cargo.toml](file:///Users/future/KB/project/app/loi/crates/loid/crates/evaluator/Cargo.toml)
+- `uid:1001` → [src/main.rs](file:///Users/future/KB/project/app/loi/crates/leviticus/src/main.rs)
+- `uid:1002` → [src/daemon/mod.rs](file:///Users/future/KB/project/app/loi/crates/leviticus/src/daemon/mod.rs)
+- `uid:1003` → [crates/evaluator/Cargo.toml](file:///Users/future/KB/project/app/loi/crates/leviticus/crates/evaluator/Cargo.toml)
 
 ### Global Symbols
 
-- `loid.root` → [/Users/future/.loid](file:///Users/future/.loid) — Root directory of loid system
-- `loid.manifest` → [/Users/future/.loid/manifest.json](file:///Users/future/.loid/manifest.json) — Installation + version state
-- `loid.symbols` → [/Users/future/.loid/symbols.json](file:///Users/future/.loid/symbols.json) — Symbol registry for navigation
+- `leviticus.root` → [/Users/future/.leviticus](file:///Users/future/.leviticus) — Root directory of leviticus system
+- `leviticus.manifest` → [/Users/future/.leviticus/manifest.json](file:///Users/future/.leviticus/manifest.json) — Installation + version state
+- `leviticus.symbols` → [/Users/future/.leviticus/symbols.json](file:///Users/future/.leviticus/symbols.json) — Symbol registry for navigation
 
 

@@ -1,0 +1,13 @@
+{
+    "files.exclude": {
+        "**/target": true,
+        ".vscode": true,
+
+        "KEEP.end": true
+    },
+    "search.exclude": {
+        ".vscode": false,
+
+        "KEEP.end": true
+    },
+}

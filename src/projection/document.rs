@@ -1,11 +1,10 @@
+use crate::daemon::{
+    resolver::{leviticus_root, project_root},
+    state::DaemonState,
+};
 use std::{
     fs,
     path::{Path, PathBuf},
-};
-
-use crate::{
-    daemon::resolver::{leviticus_root, project_root},
-    state::state,
 };
 
 fn file_link(path: &Path) -> String {
@@ -13,23 +12,18 @@ fn file_link(path: &Path) -> String {
 
     format!("file://{}", p.to_string_lossy())
 }
-
 fn data_dir() -> PathBuf {
     PathBuf::from("src/daemon/data")
 }
-
 fn explain_json_path() -> PathBuf {
     data_dir().join("explain.json")
 }
-
 fn manifest_json_path() -> PathBuf {
     data_dir().join("manifest.json")
 }
-
 fn symbols_json_path() -> PathBuf {
     data_dir().join("symbols.json")
 }
-
 fn read_symbols() -> serde_json::Value {
     let path = symbols_json_path();
 
@@ -37,7 +31,6 @@ fn read_symbols() -> serde_json::Value {
 
     serde_json::from_str(&raw).unwrap_or_else(|_| serde_json::json!([]))
 }
-
 fn symbol_to_md(symbol: &serde_json::Value) -> String {
     let id = symbol
         .get("id")
@@ -63,22 +56,22 @@ fn render_symbols(json: &serde_json::Value) -> String {
     // -------------------------
     // FILE REGISTRY (project)
     // -------------------------
-    if let Some(fs) = json.get("filesystem") {
-        if let Some(map) = fs.get("uid_mapping").and_then(|v| v.as_object()) {
-            out.push_str("### File Registry\n\n");
+    if let Some(fs) = json.get("filesystem")
+        && let Some(map) = fs.get("uid_mapping").and_then(|v| v.as_object())
+    {
+        out.push_str("### File Registry\n\n");
 
-            let project_root = project_root();
+        let project_root = project_root();
 
-            for (uid, path) in map {
-                let rel = path.as_str().unwrap_or("");
+        for (uid, path) in map {
+            let rel = path.as_str().unwrap_or("");
 
-                let full = project_root.join(rel);
+            let full = project_root.join(rel);
 
-                out.push_str(&format!("- `{}` → [{}]({})\n", uid, rel, file_link(&full)));
-            }
-
-            out.push_str("\n");
+            out.push_str(&format!("- `{}` → [{}]({})\n", uid, rel, file_link(&full)));
         }
+
+        out.push_str("\n");
     }
 
     // -------------------------
@@ -86,42 +79,41 @@ fn render_symbols(json: &serde_json::Value) -> String {
     // -------------------------
     let symbols_path = leviticus_root().join("symbols.json");
 
-    if let Ok(raw) = std::fs::read_to_string(symbols_path) {
-        if let Ok(json) = serde_json::from_str::<serde_json::Value>(&raw) {
-            if let Some(arr) = json.get("symbols").and_then(|v| v.as_array()) {
-                out.push_str("### Global Symbols\n\n");
+    if let Ok(raw) = std::fs::read_to_string(symbols_path)
+        && let Ok(json) = serde_json::from_str::<serde_json::Value>(&raw)
+        && let Some(arr) = json.get("symbols").and_then(|v| v.as_array())
+    {
+        out.push_str("### Global Symbols\n\n");
 
-                let root = leviticus_root();
+        let root = leviticus_root();
 
-                for s in arr {
-                    let id = s.get("id").and_then(|v| v.as_str()).unwrap_or("unknown");
-                    let path = s.get("path").and_then(|v| v.as_str()).unwrap_or("");
+        for s in arr {
+            let id = s.get("id").and_then(|v| v.as_str()).unwrap_or("unknown");
+            let path = s.get("path").and_then(|v| v.as_str()).unwrap_or("");
 
-                    let full = if path.starts_with("~/.leviticus") {
-                        root.join(path.trim_start_matches("~/.leviticus/"))
-                    } else {
-                        root.join(path)
-                    };
+            let full = if path.starts_with("~/.leviticus") {
+                root.join(path.trim_start_matches("~/.leviticus/"))
+            } else {
+                root.join(path)
+            };
 
-                    out.push_str(&format!(
-                        "- `{}` → [{}]({}) — {}\n",
-                        id,
-                        path,
-                        file_link(&full),
-                        s.get("doc").and_then(|v| v.as_str()).unwrap_or("")
-                    ));
-                }
-
-                out.push_str("\n");
-            }
+            out.push_str(&format!(
+                "- `{}` → [{}]({}) — {}\n",
+                id,
+                path,
+                file_link(&full),
+                s.get("doc").and_then(|v| v.as_str()).unwrap_or("")
+            ));
         }
+
+        out.push('\n');
     }
 
     out
 }
 pub fn generate_explain_doc() -> std::io::Result<()> {
     let workspace = std::env::current_dir()?;
-    state::save_workspace(&workspace);
+    DaemonState::save_workspace(&workspace);
     let out = workspace.join("explain.md");
     let path = explain_json_path();
 
@@ -146,12 +138,10 @@ pub fn generate_explain_doc() -> std::io::Result<()> {
 
     Ok(())
 }
-
 pub fn generate_runtime_views() {
     println!("▶ generate_runtime_views CALLED");
     generate_explain_doc();
 }
-
 fn render_explain(json: &serde_json::Value) -> String {
     let mut out = String::new();
 
@@ -220,10 +210,6 @@ fn render_explain(json: &serde_json::Value) -> String {
     out.push_str("\n");
 
     out
-}
-
-pub fn generate_explain_doc2() {
-    todo!("generate_explain_doc2")
 }
 pub fn open_explain_doc() {
     todo!("open_explain_doc")
