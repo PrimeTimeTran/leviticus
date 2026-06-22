@@ -1,0 +1,26 @@
+[package]
+name = "leviticus"
+description = "Leviticus is a suite of tools which help developers build robust and maintainable applications across platforms, languages, frameworks, and runtimes."
+edition = "2024"
+version = "0.0.1"
+authors = ["Loi Tran"]
+license = "MIT OR Apache-2.0"
+
+documentation = "https://docs.rs/leviticus"
+homepage = "https://kb-blog-primetimetran.vercel.app/"
+repository = "https://github.com/primetimetran/leviticus"
+keywords = ["virtualization","visualization","filesystem", "development-tools", "os"]
+categories = ["virtualization","visualization","filesystem", "development-tools", "os"]
+
+
+[dependencies]
+clap = { version = "4.6.1", features = ["derive"] }
+notify = "8.2.0"
+sd-notify = "0.5.0"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.52.3", features = ["full"] }
+tracing = "0.1.44"
+tracing-subscriber = "0.3"
+dirs = "6"
+toml = "1.1.2"
