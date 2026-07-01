@@ -1,4 +1,3 @@
-// use fuser::ll::flags::fopen_flags::FopenFlags;
 use fuser::{
     BsdFileFlags, Errno, FileAttr, FileHandle, FileType, Filesystem, FopenFlags, Generation,
     INodeNo, LockOwner, OpenFlags, ReplyAttr, ReplyCreate, ReplyData, ReplyDirectory, ReplyEntry,
@@ -16,8 +15,6 @@ use std::{
 };
 
 const TTL: Duration = Duration::from_secs(1);
-
-// Save file, create file
 
 static BASE_TIME: LazyLock<SystemTime> = LazyLock::new(|| SystemTime::now());
 
@@ -76,7 +73,6 @@ static FILES: LazyLock<Vec<FileNode>> = LazyLock::new(|| {
     ]
 });
 
-// Read
 fn file_by_ino(ino: u64) -> Option<&'static FileNode> {
     FILES.iter().find(|f| f.ino == ino)
 }
@@ -91,14 +87,12 @@ impl Default for LoiFs {
     fn default() -> Self {
         let mut files_map = HashMap::new();
         let mut names_map = HashMap::new();
-        let mut max_ino = 1; // Start counter above the fixed ones
+        let mut max_ino = 1;
 
-        // Iterate over your static FILES and insert them into the maps
         for file in FILES.iter() {
             files_map.insert(file.ino, file.data.to_vec());
             names_map.insert(file.name.to_string(), file.ino);
 
-            // Keep track of the highest Inode so we don't overwrite static ones
             if file.ino >= max_ino {
                 max_ino = file.ino + 1;
             }
@@ -111,10 +105,6 @@ impl Default for LoiFs {
         }
     }
 }
-// impl Filesystem for LoiFs {
-
-// }
-
 impl Filesystem for LoiFs {
     fn getattr(&self, _req: &Request, ino: INodeNo, _fh: Option<FileHandle>, reply: ReplyAttr) {
         let files = self.files.lock().unwrap();
@@ -199,30 +189,6 @@ impl Filesystem for LoiFs {
         }
     }
 
-    // fn write(
-    //     &self,
-    //     _req: &Request,
-    //     ino: INodeNo,
-    //     _fh: FileHandle,
-    //     offset: u64,
-    //     data: &[u8],
-    //     _write_flags: WriteFlags,
-    //     _flags: OpenFlags,
-    //     _lock_owner: Option<LockOwner>,
-    //     reply: fuser::ReplyWrite,
-    // ) {
-    //     // 1. You receive the bytes in 'data'
-    //     // 2. You would typically store these in a thread-safe structure (like a Mutex<HashMap<INodeNo, Vec<u8>>>)
-    //     println!(
-    //         "Received write for inode {}: {} bytes at offset {}",
-    //         ino.0,
-    //         data.len(),
-    //         offset
-    //     );
-
-    //     // 3. Acknowledge the write
-    //     reply.written(data.len() as u32);
-    // }
     fn write(
         &self,
         _req: &Request,
@@ -235,21 +201,36 @@ impl Filesystem for LoiFs {
         _lock_owner: Option<LockOwner>,
         reply: fuser::ReplyWrite,
     ) {
-        let mut files = self.files.lock().unwrap();
-        if let Some(file_content) = files.get_mut(&ino.0) {
-            let offset = offset as usize;
-            let data_len = data.len();
-            if offset + data_len > file_content.len() {
-                file_content.resize(offset + data_len, 0);
+        let new_data = data.to_vec();
+        let name = {
+            let mut files = self.files.lock().unwrap();
+            let filenames = self.filenames.lock().unwrap();
+
+            if let Some(file_content) = files.get_mut(&ino.0) {
+                let offset = offset as usize;
+                let data_len = data.len();
+
+                if offset + data_len > file_content.len() {
+                    file_content.resize(offset + data_len, 0);
+                }
+                file_content[offset..offset + data_len].copy_from_slice(data);
+                filenames
+                    .iter()
+                    .find(|(_, i)| **i == ino.0)
+                    .map(|(n, _)| n.clone())
+            } else {
+                None
             }
-
-            file_content[offset..offset + data_len].copy_from_slice(data);
-
-            println!("Successfully wrote {} bytes to inode {}", data_len, ino.0);
-            reply.written(data_len as u32);
-        } else {
-            reply.error(Errno::from_i32(libc::ENOENT));
+        };
+        let content_to_save = {
+            let files = self.files.lock().unwrap();
+            files.get(&ino.0).cloned()
+        };
+        if let (Some(n), Some(data)) = (name, content_to_save) {
+            let path = format!("/Users/future/KB/project/app/loi/data/{}", n);
+            let _ = std::fs::write(path, data);
         }
+        reply.written(data.len() as u32);
     }
     fn setattr(
         &self,
@@ -269,29 +250,8 @@ impl Filesystem for LoiFs {
         _flags: Option<BsdFileFlags>,
         reply: ReplyAttr,
     ) {
-        // When you run `touch filename`, this method is called.
-        // You must update your stored metadata for this inode.
-        reply.attr(&TTL, &attr(ino, FileType::RegularFile, 0)); // Return the new attributes
+        reply.attr(&TTL, &attr(ino, FileType::RegularFile, 0));
     }
-
-    // fn create(
-    //     &self,
-    //     _req: &Request,
-    //     _parent: INodeNo,
-    //     name: &OsStr,
-    //     _mode: u32,
-    //     _umask: u32,
-    //     flags: i32, // The kernel passes the actual flags here
-    //     reply: ReplyCreate,
-    // ) {
-    //     // In a real app, you would add a new entry to your internal HashMap here.
-    //     // For now, let's just log that the kernel requested it:
-    //     println!("Kernel requested creation of: {:?}", name);
-
-    //     let open_flags = fuser::FopenFlags::from_bits_truncate(flags as u32);
-    //     let attr = attr(INodeNo(6), FileType::RegularFile, 0);
-    //     reply.created(&TTL, &attr, Generation(1), FileHandle(1), open_flags);
-    // }
     fn create(
         &self,
         _req: &Request,
@@ -318,5 +278,29 @@ impl Filesystem for LoiFs {
             FileHandle(ino),
             fuser::FopenFlags::from_bits_truncate(flags as u32),
         );
+    }
+}
+impl LoiFs {
+    pub fn load_from_disk(path: &str) -> Self {
+        let mut files_map = HashMap::new();
+        let mut names_map = HashMap::new();
+        let mut ino_counter = 10;
+        if let Ok(entries) = std::fs::read_dir(path) {
+            for entry in entries.flatten() {
+                let name = entry.file_name().to_string_lossy().to_string();
+                let content = std::fs::read(entry.path()).unwrap_or_default();
+
+                let ino = ino_counter;
+                files_map.insert(ino, content);
+                names_map.insert(name, ino);
+                ino_counter += 1;
+            }
+        }
+
+        Self {
+            next_ino: AtomicU64::new(ino_counter),
+            files: Arc::new(Mutex::new(files_map)),
+            filenames: Arc::new(Mutex::new(names_map)),
+        }
     }
 }
