@@ -1,3 +1,14 @@
+# Fuser
+
+
+- Creates VFS
+-
+
+
+- Symblink
+  - Mounts 'bookmarked' directories
+  -
+
 cargo run
 
 umount -f ~/KB/project/app/loi/crates/leviticus/fuse_fs

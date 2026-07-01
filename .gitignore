@@ -1,1 +1,5 @@
+.access
+
+# Ignore the FUSE mount point to prevent "Device not configured" errors
+fuse_fs/
 target/

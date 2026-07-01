@@ -1,12 +1,13 @@
 use fuser::{
     BsdFileFlags, Errno, FileAttr, FileHandle, FileType, Filesystem, FopenFlags, Generation,
-    INodeNo, LockOwner, OpenFlags, ReplyAttr, ReplyCreate, ReplyData, ReplyDirectory, ReplyEntry,
-    Request, WriteFlags,
+    INodeNo, LockOwner, OpenFlags, RenameFlags, ReplyAttr, ReplyCreate, ReplyData, ReplyDirectory,
+    ReplyEntry, Request, WriteFlags,
 };
 
 use std::{
     collections::HashMap,
     ffi::OsStr,
+    path::PathBuf,
     sync::{
         Arc, LazyLock, Mutex,
         atomic::{AtomicU64, Ordering},
@@ -19,6 +20,12 @@ const TTL: Duration = Duration::from_secs(1);
 static BASE_TIME: LazyLock<SystemTime> = LazyLock::new(|| SystemTime::now());
 
 fn attr(ino: INodeNo, kind: FileType, size: u64) -> FileAttr {
+    let perm = match kind {
+        FileType::Directory => 0o755,
+        FileType::RegularFile => 0o644,
+        _ => 0o644,
+    };
+
     FileAttr {
         ino,
         size,
@@ -28,7 +35,7 @@ fn attr(ino: INodeNo, kind: FileType, size: u64) -> FileAttr {
         ctime: *BASE_TIME,
         crtime: *BASE_TIME,
         kind,
-        perm: 0o755,
+        perm,
         nlink: 1,
         uid: 501,
         gid: 20,
@@ -79,6 +86,7 @@ fn file_by_ino(ino: u64) -> Option<&'static FileNode> {
 
 #[derive(Debug)]
 pub struct LoiFs {
+    pub cwd: String,
     pub next_ino: AtomicU64,
     pub files: Arc<Mutex<HashMap<u64, Vec<u8>>>>,
     pub filenames: Arc<Mutex<HashMap<String, u64>>>,
@@ -99,6 +107,7 @@ impl Default for LoiFs {
         }
 
         Self {
+            cwd: "/Users/future/KB/project/app/loi/data".to_string(),
             next_ino: AtomicU64::new(max_ino),
             files: Arc::new(Mutex::new(files_map)),
             filenames: Arc::new(Mutex::new(names_map)),
@@ -129,26 +138,19 @@ impl Filesystem for LoiFs {
             return;
         }
 
-        let mut entries: Vec<(INodeNo, u64, FileType, &str)> = Vec::new();
+        let mut entries = vec![
+            (INodeNo(1), 1, FileType::Directory, "."),
+            (INodeNo(1), 2, FileType::Directory, ".."),
+        ];
 
-        // static entries
-        entries.push((INodeNo(1), 1, FileType::Directory, "."));
-        entries.push((INodeNo(1), 2, FileType::Directory, ".."));
-
-        // dynamic entries
-        for (i, file) in FILES.iter().enumerate() {
-            entries.push((
-                INodeNo(file.ino),
-                (i as u64) + 3,
-                FileType::RegularFile,
-                file.name,
-            ));
+        let filenames = self.filenames.lock().unwrap();
+        for (i, (name, &inode)) in filenames.iter().enumerate() {
+            entries.push((INodeNo(inode), (i + 3) as u64, FileType::RegularFile, name));
         }
 
         for (i, entry) in entries.iter().enumerate().skip(offset as usize) {
             reply.add(entry.0, (i + 1) as u64, entry.2, entry.3);
         }
-
         reply.ok();
     }
     fn read(
@@ -164,7 +166,6 @@ impl Filesystem for LoiFs {
     ) {
         let files = self.files.lock().unwrap();
         if let Some(data) = files.get(&ino.0) {
-            // Slice the data based on offset and size
             let start = offset as usize;
             if start < data.len() {
                 let end = (start + size as usize).min(data.len());
@@ -227,7 +228,8 @@ impl Filesystem for LoiFs {
             files.get(&ino.0).cloned()
         };
         if let (Some(n), Some(data)) = (name, content_to_save) {
-            let path = format!("/Users/future/KB/project/app/loi/data/{}", n);
+            let base = PathBuf::from(&self.cwd);
+            let path = base.join(&n);
             let _ = std::fs::write(path, data);
         }
         reply.written(data.len() as u32);
@@ -265,11 +267,8 @@ impl Filesystem for LoiFs {
         let ino = self.next_ino.fetch_add(1, Ordering::SeqCst);
         let name_str = name.to_string_lossy().into_owned();
 
-        // 1. Store the new file in your maps
         self.filenames.lock().unwrap().insert(name_str, ino);
         self.files.lock().unwrap().insert(ino, Vec::new());
-
-        // 2. Reply with the new unique Inode
         let attr = attr(INodeNo(ino), FileType::RegularFile, 0);
         reply.created(
             &TTL,
@@ -278,6 +277,50 @@ impl Filesystem for LoiFs {
             FileHandle(ino),
             fuser::FopenFlags::from_bits_truncate(flags as u32),
         );
+    }
+    fn unlink(&self, _req: &Request, parent: INodeNo, name: &OsStr, reply: fuser::ReplyEmpty) {
+        let name_str = name.to_string_lossy().to_string();
+        let mut filenames = self.filenames.lock().unwrap();
+        let mut files = self.files.lock().unwrap();
+
+        if let Some(ino) = filenames.remove(&name_str) {
+            files.remove(&ino);
+            let base = PathBuf::from(&self.cwd);
+            let new_path = base.join(&name_str);
+            let _ = std::fs::remove_file(new_path);
+
+            reply.ok();
+        } else {
+            reply.error(Errno::from_i32(libc::ENOENT));
+        }
+    }
+    fn rename(
+        &self,
+        _req: &Request,
+        _parent: INodeNo,
+        name: &OsStr,
+        _newparent: INodeNo,
+        newname: &OsStr,
+        _flags: RenameFlags,
+        reply: fuser::ReplyEmpty,
+    ) {
+        let old_name = name.to_string_lossy().to_string();
+        let new_name = newname.to_string_lossy().to_string();
+
+        let mut filenames = self.filenames.lock().unwrap();
+
+        // 1. Update in-memory map
+        if let Some(ino) = filenames.remove(&old_name) {
+            filenames.insert(new_name.clone(), ino);
+            let base = PathBuf::from(&self.cwd);
+            let old_path = base.join(&old_name);
+            let new_path = base.join(&new_name);
+            let _ = std::fs::rename(old_path, new_path);
+
+            reply.ok();
+        } else {
+            reply.error(Errno::from_i32(libc::ENOENT));
+        }
     }
 }
 impl LoiFs {
@@ -298,6 +341,7 @@ impl LoiFs {
         }
 
         Self {
+            cwd: "/Users/future/KB/project/app/loi/data/{}".to_string(),
             next_ino: AtomicU64::new(ino_counter),
             files: Arc::new(Mutex::new(files_map)),
             filenames: Arc::new(Mutex::new(names_map)),
