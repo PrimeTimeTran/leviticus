@@ -1,6 +1,4 @@
-# leviticus Explain
-
-## Symbols (Clickable)
+# Leviticus Explain
 
 ## Symbols (Clickable)
 
@@ -15,5 +13,3 @@
 - `leviticus.root` → [/Users/future/.leviticus](file:///Users/future/.leviticus) — Root directory of leviticus system
 - `leviticus.manifest` → [/Users/future/.leviticus/manifest.json](file:///Users/future/.leviticus/manifest.json) — Installation + version state
 - `leviticus.symbols` → [/Users/future/.leviticus/symbols.json](file:///Users/future/.leviticus/symbols.json) — Symbol registry for navigation
-
-
