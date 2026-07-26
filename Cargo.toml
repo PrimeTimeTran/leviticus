@@ -17,16 +17,16 @@ categories = ["virtualization","visualization","filesystem", "development-tools"
 cli = { path = "../cli" }
 
 # Inherited dependencies
-dirs = { workspace = true }
-toml = { workspace = true }
-libc = { workspace = true }
-fuser = { workspace = true }
-notify = { workspace = true }
-tracing = { workspace = true }
-sd-notify = { workspace = true }
-serde_json = { workspace = true }
-async-trait = { workspace = true }
-tracing-subscriber = { workspace = true }
+dirs.workspace = true
+toml.workspace = true
+libc.workspace = true
+fuser.workspace = true
+notify.workspace = true
+tracing.workspace = true
+sd-notify.workspace = true
+serde_json.workspace = true
+async-trait.workspace = true
+tracing-subscriber.workspace = true
 tokio = { workspace = true, features = ["full"] }
 clap = { workspace = true, features = ["derive"] }
 serde = { workspace = true, features = ["derive"] }

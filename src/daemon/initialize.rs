@@ -4,7 +4,6 @@ use crate::daemon::resolver::leviticus_dir;
 
 pub fn init() -> Result<()> {
     let root = leviticus_dir();
-
     let dirs = [
         root.join("registry"),
         root.join("views"),
@@ -12,16 +11,13 @@ pub fn init() -> Result<()> {
         root.join("cache/projections"),
         root.join("logs"),
     ];
-
     for dir in dirs {
         fs::create_dir_all(dir)?;
     }
-
     let files = [
         (
             root.join("config.toml"),
             r#"# leviticus configuration
-
             version = 1
             "#,
         ),
@@ -52,8 +48,6 @@ pub fn init() -> Result<()> {
             fs::write(path, contents)?;
         }
     }
-
     println!("Initialized leviticus at {}", root.display());
-
     Ok(())
 }
