@@ -5,30 +5,30 @@ use cli::{CliCommand, Context};
 // =========================
 
 pub struct View {
-    pub name: String,
+	pub name: String,
 }
 
 #[async_trait::async_trait]
 impl CliCommand for View {
-    async fn run(&self, ctx: &Context) {
-        println!("👁️ switching to view: {}", self.name);
+	async fn run(&self, ctx: &Context) {
+		println!("👁️ switching to view: {}", self.name);
 
-        // real logic: set active view
-    }
+		// real logic: set active view
+	}
 }
 
 // -------------------------
 
 pub struct ViewFork {
-    pub name: String,
+	pub name: String,
 }
 #[async_trait::async_trait]
 impl CliCommand for ViewFork {
-    async fn run(&self, ctx: &Context) {
-        println!("🍴 forking view: {}", self.name);
+	async fn run(&self, ctx: &Context) {
+		println!("🍴 forking view: {}", self.name);
 
-        // real logic: fork view state
-    }
+		// real logic: fork view state
+	}
 }
 
 // -------------------------
@@ -36,11 +36,11 @@ impl CliCommand for ViewFork {
 pub struct ViewList;
 #[async_trait::async_trait]
 impl CliCommand for ViewList {
-    async fn run(&self, ctx: &Context) {
-        println!("📋 listing views");
+	async fn run(&self, ctx: &Context) {
+		println!("📋 listing views");
 
-        // real logic: list available views
-    }
+		// real logic: list available views
+	}
 }
 
 // =========================
@@ -50,11 +50,11 @@ impl CliCommand for ViewList {
 pub struct Explain;
 #[async_trait::async_trait]
 impl CliCommand for Explain {
-    async fn run(&self, ctx: &Context) {
-        println!("🧠 generating explanation of system state");
+	async fn run(&self, ctx: &Context) {
+		println!("🧠 generating explanation of system state");
 
-        // real logic: dependency + resolution explanation
-    }
+		// real logic: dependency + resolution explanation
+	}
 }
 
 // -------------------------
@@ -62,20 +62,20 @@ impl CliCommand for Explain {
 pub struct ExplainDoc;
 #[async_trait::async_trait]
 impl CliCommand for ExplainDoc {
-    async fn run(&self, ctx: &Context) {
-        println!("📄 opening explanation document");
+	async fn run(&self, ctx: &Context) {
+		println!("📄 opening explanation document");
 
-        // real logic: open doc viewer or file
-    }
+		// real logic: open doc viewer or file
+	}
 }
 
 pub struct Deps {
-    pub name: String,
+	pub name: String,
 }
 #[async_trait::async_trait]
 impl CliCommand for Deps {
-    async fn run(&self, ctx: &Context) {
-        println!("📄 opening explanation document");
-        // real logic: open doc viewer or file
-    }
+	async fn run(&self, ctx: &Context) {
+		println!("📄 opening explanation document");
+		// real logic: open doc viewer or file
+	}
 }
