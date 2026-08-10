@@ -9,8 +9,8 @@ use std::{
 	ffi::OsStr,
 	path::PathBuf,
 	sync::{
-		Arc, LazyLock, Mutex,
 		atomic::{AtomicU64, Ordering},
+		Arc, LazyLock, Mutex,
 	},
 	time::{Duration, SystemTime},
 };

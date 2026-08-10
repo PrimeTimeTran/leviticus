@@ -40,7 +40,7 @@ Purpose:
 
 Created when:
 
-```bash
+```sh
 loid start
 ```
 
